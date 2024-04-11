@@ -1,10 +1,13 @@
 Template code for A04
 ------------
 
-Author: Your name [youremail@email.arizona.edu]
-Date: April 15, 2023
+Author: Your name [dbrignac@.arizona.edu]
+Date: April 10, 2024
 
 **PLEASE UPDATE THIS README**
+
+All that happens right now is a black screen in the html page. Not sure what is happening.
+Will try to fix this later.
 
 
 Included files:

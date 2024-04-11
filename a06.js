@@ -346,13 +346,39 @@ function programBillboard(){
 					"gl_Position = u_worldViewProjection * a_position;\n"+
 				"}";
 	var fShaderObj = 	"precision mediump float;\n"+
-					"varying vec3 v_normal;\n"+
-					"varying vec2 v_texcoord;\n"+
-					"uniform vec3 u_lightDirection;\n"+
-					"uniform sampler2D u_texture;\n"+
-					"void main() {\n"+
-						"gl_FragColor = texture2D(u_texture, v_texcoord);\n"+
-					"}";
+				"varying vec3 v_normal;\n"+
+				"varying vec2 v_texcoord;\n"+
+				"uniform vec3 u_lightDirection;\n"+
+				"uniform sampler2D u_texture;\n"+
+				"const float waterRefractionIndex = 1.33; // Refractive index of water (typical value)\n"+
+				"void main() {\n"+
+					"// Calculate the incident ray direction\n"+
+					"vec3 incident = normalize(vec3(0.0, 0.0, -1.0)); // Assuming light comes from behind the camera\n"+
+					"// Calculate the refracted ray direction using Snell's law\n"+
+					"vec3 normal = normalize(v_normal);\n"+
+					"float cosTheta1 = dot(-incident, normal);\n"+
+					"float n1 = 1.0; // Refractive index of air\n"+
+					"float n2 = waterRefractionIndex; // Refractive index of water\n"+
+					"float ratio = n1 / n2;\n"+
+					"float discriminant = 1.0 - ratio * ratio * (1.0 - cosTheta1 * cosTheta1);\n"+
+					"vec3 refracted = vec3(0.0);\n"+
+					"if (discriminant >= 0.0) {\n"+
+						"refracted = ratio * incident + (ratio * cosTheta1 - sqrt(discriminant)) * normal;\n"+
+					"}\n"+
+					"// Adjust texture coordinates based on refracted direction\n"+
+					"vec2 adjustedTexCoord = v_texcoord + refracted.xy * 0.05; // Adjust coefficient according to your needs\n"+
+					"// Check if the adjusted texture coordinate is within bounds\n"+
+					"if (adjustedTexCoord.x < 0.0 || adjustedTexCoord.x > 1.0 || adjustedTexCoord.y < 0.0 || adjustedTexCoord.y > 1.0) {\n"+
+						"// Make the fragment invisible\n"+
+						"discard;\n"+
+					"}\n"+
+					"// Calculate light intensity using the angle between the refracted ray and light direction\n"+
+					"float lightIntensity = max(dot(refracted, normalize(u_lightDirection)), 0.0);\n"+
+					"// Apply light intensity to the texture color\n"+
+					"vec4 textureColor = texture2D(u_texture, adjustedTexCoord);\n"+
+					"gl_FragColor = vec4(textureColor.rgb * lightIntensity, textureColor.a);\n"+
+				"}";
+
 	programBill = webglUtils.createProgramFromSources(gl, [vShaderObj,fShaderObj])
 	
 	// look up where the vertex data needs to go.
